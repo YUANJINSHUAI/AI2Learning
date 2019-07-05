@@ -1,110 +1,96 @@
 # -*- coding: utf-8 -*-
 # Created by yuanjinshuai at 2019-07-04
 
-import math
-import numpy as np
+
+'''
+while len(data) > 1:
+    print("☞ 第 {} 次迭代\n".format(10 - len(data) + 1))
+    min_distance = float('inf')  # 设定初始距离为无穷大
+    for i in range(len(data)):
+        print("---")
+        for j in range(i + 1, len(data)):
+            distance = DTWDistance(data[i], data[j])
+            print("计算 {} 与 {} 距离为 {}".format(data[i], data[j], distance))
+            if distance < min_distance:
+                min_distance = distance
+                min_ij = (i, j)
+
+    i, j = min_ij  # 最近数据点序号
+    data1 = data[i]
+    data2 = data[j]
+    data = np.delete(data, j, 0)  # 删除原数据
+    data = np.delete(data, i, 0)  # 删除原数据
+
+    b = np.atleast_2d([(data1[0] + data2[0]) / 2, (data1[1] + data2[1]) / 2])  # 计算两点新中心
+    data = np.concatenate((data, b), axis=0)  # 将新数据点添加到迭代过程
+    print("\n最近距离:{} & {} = {}, 合并后中心:{}\n".format(data1, data2, min_distance, b))
+
+'''
+
+
 import pandas as pd
-import scipy.cluster.hierarchy as hac
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+import numpy as np
+import matplotlib.pylab as plt
+import math
 
-def generate_data(nT,nC,mG,A,sg,eg):
-    timeSeries = pd.DataFrame()
-    basicSeries = pd.DataFrame()
-    β = 0.5*np.pi
-    ω = 2*np.pi/nT
-    t = np.linspace(0,nT,nT)
-    for ic,c in enumerate(np.arange(nC)):
-        slope = sg*(-(nC-1)/2 + c)
-        s = A * (-1**c -np.exp(t*eg))*np.sin(t*ω*(c+1) + c*β) + t*ω*slope
-        basicSeries[ic] = s
-        sr = np.outer(np.ones_like(mG),s)
-        sr = sr + 1*np.random.rand(mG,nT) + 1.0*np.random.randn(mG,1)
-        timeSeries = timeSeries.append(pd.DataFrame(sr))
-    return basicSeries, timeSeries
+x=np.linspace(0,50,100)
+ts1=pd.Series(3.1*np.sin(x/1.5)+3.5)
+ts2=pd.Series(2.2*np.sin(x/3.5+2.4)+3.2)
+ts3=pd.Series(0.04*x+3.0)
 
-def plot_basicSeries(basicSeries):
-    with plt.style.context('seaborn'):      # 'fivethirtyeight'
-         fig = plt.figure(figsize=(20,8)) ;
-         ax1 = fig.add_subplot(111);
-         plt.title('Basice patterns to generate Longitudinal data',fontsize=25, fontweight='bold')
-         plt.xlabel('Time', fontsize=15, fontweight='bold')
-         plt.ylabel('Signal of the observed feature', fontsize=15, fontweight='bold')
-         plt.plot(basicSeries, lw=10, alpha = 1.8)
+ts1.plot()
+ts2.plot()
+ts3.plot()
 
-def plot_timeSeries(timeSeries):
-    with plt.style.context('seaborn'):      # 'fivethirtyeight'
-         fig = plt.figure(figsize=(20,8)) ;
-         ax1 = fig.add_subplot(111);
-         plt.title('Longitudinal data',fontsize=25, fontweight='bold')
-         plt.xlabel('Time', fontsize=15, fontweight='bold')
-         plt.ylabel('Signal of the observed feature', fontsize=15, fontweight='bold')
-         plt.plot(timeSeries.T)
-         #ax1 = sns.tsplot(ax=ax1, data=timeSeries.values, ci=[68, 95])
-
-def plot_dendogram(Z):
-    with plt.style.context('fivethirtyeight' ):
-         plt.figure(figsize=(15, 5))
-         plt.title('Dendrogram of time series clustering',fontsize=25, fontweight='bold')
-         plt.xlabel('sample index', fontsize=25, fontweight='bold')
-         plt.ylabel('distance', fontsize=25, fontweight='bold')
-         hac.dendrogram( Z, leaf_rotation=90.,    # rotates the x axis labels
-                            leaf_font_size=15., ) # font size for the x axis labels
-        #plt.show()
-
-def plot_results(timeSeries, D, cut_off_level):
-    result = pd.Series(hac.fcluster(D, cut_off_level, criterion='maxclust'))
-    clusters = result.unique()
-    figX = 20; figY = 15
-    fig = plt.subplots(figsize=(figX, figY))
-    mimg = math.ceil(cut_off_level/2.0)
-    gs = gridspec.GridSpec(mimg,2, width_ratios=[1,1])
-    for ipic, c in enumerate(clusters):
-        cluster_index = result[result==c].index
-        print(ipic, "Cluster number %d has %d elements" % (c, len(cluster_index)))
-        ax1 = plt.subplot(gs[ipic])
-        ax1.plot(timeSeries.T.iloc[:,cluster_index])
-        ax1.set_title(('Cluster number '+str(c)), fontsize=15, fontweight='bold')
-    #plt.show()
-
-def plot_basic_cluster(X):
-    with plt.style.context('fivethirtyeight' ):
-         plt.figure(figsize=(17,3))
-         D1 = hac.linkage(X, method='ward', metric='euclidean')
-         dn1= hac.dendrogram(D1)
-         plt.title("Clustering: method='ward', metric='euclidean'")
-
-         plt.figure(figsize=(17, 3))
-         D2 = hac.linkage(X, method='single', metric='euclidean')
-         dn2= hac.dendrogram(D2)
-         plt.title("Clustering: method='single', metric='euclidean'")
-         plt.show()
-
-#---- number of time series
-nT = 101  # number of observational point in a time series
-nC = 6    # number of charakteristic  signal groups
-mG = 10   # number of time series in a charakteristic signal group
-
-#---- control parameters for data generation
-Am = 0.3; # amplitude of the signal
-sg = 0.3  # rel. weight of the slope
-eg = 0.02 # rel. weight of the damping
-
-#---- generate the data
-basicSeries,timeSeries = generate_data(nT,nC,mG,Am,sg,eg)
-plot_basicSeries(basicSeries)
-plot_timeSeries(timeSeries)
-
-#--- Here we use spearman correlation as distance metric
-def myMetric(x, y):
-    r = stats.pearsonr(x, y)[0]
-    return 1 - r
+plt.ylim(-2,10)
+plt.legend(['ts1','ts2','ts3'])
+plt.show()
 
 
-#--- run the clustering
-D = hac.linkage(timeSeries, method='single', metric=myMetric)
-plot_dendogram(D)
+def dtw_distance(s1, s2):
+    # 先构造的边缘
+    dtw = {}
 
-#---- evaluate the dendogram
-cut_off_level = 6   # level where to cut off the dendogram
-plot_results(timeSeries, D, cut_off_level)
+    for i in range(len(s1)):
+        dtw[(i, -1)] = float('inf')
+    for i in range(len(s2)):
+        dtw[(-1, i)] = float('inf')
+    dtw[(-1, -1)] = 0
+
+    for i in range(len(s1)):
+        for j in range(len(s2)):
+            dist = (s1[i] - s2[j]) ** 2
+            DTW[(i, j)] = dist + min(DTW[(i - 1, j)], DTW[(i, j - 1)], DTW[(i - 1, j - 1)])
+
+    return math.sqrt(DTW[len(s1) - 1, len(s2) - 1])
+
+
+# 生成可以运算的数据
+combined = np.vstack((ts1, ts2, ts3, ts1+ts2, ts2+ts3))
+data = combined
+print(len(data))
+
+distance_matrix = np.zeros([len(data), len(data)])  # 设定初始距离矩阵
+min_distance = float('inf')  # 设定初始距离为无穷大
+
+# 找到最小的距离的两簇
+for i in range(len(data)):
+    for j in range(len(data)):
+        distance = dtw_distance(data[i], data[j])
+        distance_matrix[i, j] = distance
+        print("计算 {}曲线 与 {}曲线 距离为 {}".format(i, j, distance))
+        if distance < min_distance and i != j:
+            min_distance = distance
+            min_ij = (i, j)
+print(min_ij)
+
+# 删除原矩阵中的i和j列
+culster_distance_series = np.zeros(len(distance_matrix))
+for p in range(len(distance_matrix)):
+    culster_distance_series[p] =  min(distance_matrix[p,min_ij[0]], distance_matrix[p, min_ij[1]])
+# culster_distance_2d_matrix = distance_matrix[:, [min_ij[0],min_ij[1]]]
+# distance_matrix = np.delete(distance_matrix , [min_ij[0],min_ij[1]], axis= 1)
+
+for p in range(len(distance_matrix)):
+    print(min(distance_matrix[p, min_ij[0]],distance_matrix[q, min_ij[1]]))
+
