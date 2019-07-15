@@ -32,6 +32,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pylab as plt
 import math
+import scipy.cluster.hierarchy
+import seaborn as sns
 
 x=np.linspace(0,50,100)
 ts1=pd.Series(3.1*np.sin(x/1.5)+3.5)
@@ -60,9 +62,9 @@ def dtw_distance(s1, s2):
     for i in range(len(s1)):
         for j in range(len(s2)):
             dist = (s1[i] - s2[j]) ** 2
-            DTW[(i, j)] = dist + min(DTW[(i - 1, j)], DTW[(i, j - 1)], DTW[(i - 1, j - 1)])
+            dtw[(i, j)] = dist + min(dtw[(i - 1, j)], dtw[(i, j - 1)], dtw[(i - 1, j - 1)])
 
-    return math.sqrt(DTW[len(s1) - 1, len(s2) - 1])
+    return math.sqrt(dtw[len(s1) - 1, len(s2) - 1])
 
 
 # 生成可以运算的数据
@@ -84,13 +86,7 @@ for i in range(len(data)):
             min_ij = (i, j)
 print(min_ij)
 
-# 删除原矩阵中的i和j列
-culster_distance_series = np.zeros(len(distance_matrix))
-for p in range(len(distance_matrix)):
-    culster_distance_series[p] =  min(distance_matrix[p,min_ij[0]], distance_matrix[p, min_ij[1]])
-# culster_distance_2d_matrix = distance_matrix[:, [min_ij[0],min_ij[1]]]
-# distance_matrix = np.delete(distance_matrix , [min_ij[0],min_ij[1]], axis= 1)
-
-for p in range(len(distance_matrix)):
-    print(min(distance_matrix[p, min_ij[0]],distance_matrix[q, min_ij[1]]))
-
+# compute linkage matrix for HAC clusters
+links = scipy.cluster.hierarchy.linkage(distance_matrix, method='ward')
+sns.clustermap(distance_matrix, xticklabels = False, yticklabels=False,
+               method='ward', col_linkage=links, row_linkage=links)

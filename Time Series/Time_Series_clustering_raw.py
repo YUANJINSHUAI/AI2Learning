@@ -43,7 +43,7 @@ combined = np.vstack((ts1, ts2, ts3, ts1+ts2, ts2+ts3))
 data = combined
 
 
-distance_matrix = np.zeros(0)  # 设定初始距离矩阵
+distance_matrix = np.zeros(len(data), )  # 设定初始距离矩阵
 
 for i in range(len(data)):
     for j in range(len(data)):
@@ -51,21 +51,21 @@ for i in range(len(data)):
         distance_matrix = distance
 
 
-from dtaidistance import clustering
-# Custom Hierarchical clustering
-model1 = clustering.Hierarchical(distance_matrix, {})
-# Augment Hierarchical object to keep track of the full tree
-model2 = clustering.HierarchicalTree(model1)
-cluster_idx = model2.fit(data)
-
-from scipy.cluster.hierarchy import dendrogram, linkage
-from matplotlib import pyplot as plt
-
-Z = linkage(X, 'ward')
-fig = plt.figure(figsize=(25, 10))
-dn = dendrogram(Z)
-
-Z = linkage(X, 'single')
-fig = plt.figure(figsize=(25, 10))
-dn = dendrogram(Z)
-plt.show()
+# from dtaidistance import clustering
+# # Custom Hierarchical clustering
+# model1 = clustering.Hierarchical(distance_matrix, {})
+# # Augment Hierarchical object to keep track of the full tree
+# model2 = clustering.HierarchicalTree(model1)
+# cluster_idx = model2.fit(data)
+#
+# from scipy.cluster.hierarchy import dendrogram, linkage
+# from matplotlib import pyplot as plt
+#
+# Z = linkage(X, 'ward')
+# fig = plt.figure(figsize=(25, 10))
+# dn = dendrogram(Z)
+#
+# Z = linkage(X, 'single')
+# fig = plt.figure(figsize=(25, 10))
+# dn = dendrogram(Z)
+# plt.show()
